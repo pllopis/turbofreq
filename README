@@ -1,0 +1,66 @@
+What is this?
+-------------
+
+This kernel module provides a cpufreq p-state selection driver for Linux. 
+
+Why?
+----
+
+Modern processors take advantage of the thermal headroom to improve performance
+by opportunistically adjusting its voltage and frequency based on thermal and
+energy constraints (e.g. Intel's Turbo Boost technology). This technology
+introduces performance variation over time that is often undesirable under
+certain conditions, especially for certain HPC codes. In addition, the dynamic
+window is becoming larger and more relevant with each generation, and system
+software is not thermal aware, causing thermal imbalances within a single node,
+and even within a single socket. This makes components behave like a
+heterogeneous system. 
+
+What does it do?
+----------------
+
+This driver implements policies that provide different trade-off between
+average performance and performance variability, and provides more fine-grained
+control to user-space to select the appropriate behavior.
+
+How does it work?
+-----------------
+
+After the module is inserted, it populates sysfs entries under
+/sys/devices/system/cpu/turbofreq/
+
+    pstate_available_policies: list available policies that can be fed to
+    pstate_policy.  
+        "boost" defaults to the maximum performance and should be
+           similar to the default behavior of the intel_pstate driver.  
+        "cpu" provides a stable frequency on a per-cpu basis.
+        "smp" provides a stable frequency smp-wide for all cpus in the
+           system.
+        "noboost" disables turbo boost altogether.
+
+    pstate_policy: used to select a target policy.
+
+    task_boost: the task that writes "1\n" to this file will get turbo boost
+         enabled on the cpu it is running on. Write "0\n" to disable and return
+         to the previous policy.
+
+    reset: resets all the values to the default. This will also set internal
+         frequencies that converged under "smp" or "cpu" back to the max.
+
+    global_pstate: to manually set a stable frequency. This is meant for
+         implementing cluster-wide frequency synchronization with the help of
+         AMQP, but the implementation is not finished. 
+
+There is also an interface added to each sysfs cpu to check for and
+enable/disable turbo boost on a per-cpu basis under
+/sys/devices/system/cpu/cpu%d/boost (depends on your topology).
+
+How do I use this?
+------------------
+
+To change the default cpufreq driver, the easiest way is to just disable
+intel_pstate and acpi-cpufreq.  To disable intel_pstate, just pass
+intel_pstate=disable to the kernel's boot parameters.  In our distribution
+(CentOS 6), I couldn't find any reference to acpi-cpufreq being loaded
+explicitly, so I just moved the file.  After doing this, no cpufreq driver will
+be registered until turbofreq.ko is inserted.
