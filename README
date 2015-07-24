@@ -10,16 +10,19 @@ Modern processors take advantage of the thermal headroom to improve performance
 by opportunistically adjusting its voltage and frequency based on thermal and
 energy constraints (e.g. Intel's Turbo Boost technology). This technology
 introduces performance variation over time that is often undesirable under
-certain conditions, especially for certain HPC codes. In addition, the dynamic
+certain conditions, especially for certain HPC codes. In addition, this dynamic
 window is becoming larger and more relevant with each generation, and system
 software is not thermal aware, causing thermal imbalances within a single node,
-and even within a single socket. This makes components behave like a
-heterogeneous system. 
+and even within a single socket. This make an homogeneous system behave like an
+heterogeneous system. By being aware of this heterogeneous behavior, system
+software can make a more efficient use of the hardware's resources, and expose
+mechanisms to user-space to allow runtimes or user applications choose an
+appropriate policy.
 
 What does it do?
 ----------------
 
-This driver implements policies that provide different trade-off between
+This driver implements a few policies that provide different trade-offs between
 average performance and performance variability, and provides more fine-grained
 control to user-space to select the appropriate behavior.
 
@@ -44,7 +47,7 @@ After the module is inserted, it populates sysfs entries under
          enabled on the cpu it is running on. Write "0\n" to disable and return
          to the previous policy.
 
-    reset: resets all the values to the default. This will also set internal
+    reset: resets all values to the default. This will also set internal
          frequencies that converged under "smp" or "cpu" back to the max.
 
     global_pstate: to manually set a stable frequency. This is meant for
